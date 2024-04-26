@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.model2.mvc.service.image.ImageDAO">
+
+	<resultMap id="imageSelectMap" type="ImagesVO">
+		<result property="image" column="IMAGE"/>
+		<result property="isThumbnail" column="IS_THUMBNAIL"/>
+		
+		<!-- ImagesVO 에는 ProductVO 데이터타입의 prodNumber 가 있다. -->
+		<!-- 이 productVO 데이터타입의 prodNo 필드   를 이 DB의 prod_No 로 넣고 데이터타입은 NUMERIC다-->
+		<association property="imagesProd" javaType="ProductVO">
+			<result property="prodNo" column="PROD_NO" jdbcType="NUMERIC"/>
+		</association>		
+
+	</resultMap>
+	
+	<insert id="addImage" parameterType="ImagesVO">
+		INSERT
+		INTO images (PROD_NO, IMAGE, IS_THUMBNAIL )
+		VALUES ( #{imagesProd.prodNo}, #{image}, #{isThumbnail} )
+		<!--  VALUES ( #{imagesProd.prodNo, image ) -->
+	</insert>
+	
+		<!-- SQL : INSERT -->
+	<select  id="getImageList"  parameterType="ImagesVO" resultMap="imageSelectMap">
+		SELECT IMAGE, PROD_NO , IS_THUMBNAIL 
+		FROM images 
+		WHERE prod_No = #{imagesProd.prodNo}
+	 </select>
+</mapper>

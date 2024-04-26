@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.model2.mvc.service.purchase.PurchaseDAO">
+ 	
+ 
+	<resultMap id="purchaseSelectMap" type="PurchaseVO">
+		<result property="tranNo" 		 	   			column="TRAN_NO" 		   jdbcType="NUMERIC"/>	   
+<!--	<result property="purchaseProd.prodNo" 			column="PROD_NO" 		   jdbcType="NUMERIC" />	-->
+<!-- 	<result property="buyer.userId" 	   			column="BUYER_ID" 	 	   jdbcType="VARCHAR" />	-->
+		<result property="paymentOption" 	   			column="PAYMENT_OPTION"     jdbcType="VARCHAR" />
+		<result property="receiverName" 	   			column="RECEIVER_NAME"      jdbcType="VARCHAR" />
+		<result property="receiverPhone"  	   			column="RECEIVER_PHONE"     jdbcType="VARCHAR" />
+		<result property="divyAddr" 		   			column="DEMAILADDR" 	       jdbcType="VARCHAR" />
+		<result property="divyRequest" 	  	   			column="DLVY_REQUEST" 	   jdbcType="VARCHAR" />
+<!--	<result property="purchaseProd.tranCode" 	 	column="TRAN_STATUS_CODE"   jdbcType="VARCHAR" />	-->
+		<result property="orderDate"   		   			column="ORDER_DATA" 	   	   jdbcType="DATE" />
+		<result property="divyDate" 	 	  			column="DLVY_DATE" 	   	   jdbcType="DATE" />
+	    <result property="tranCode"						column="TRAN_STATUS_CODE"	jdbcType="VARCHAR"/>
+	    
+	    <!-- 다른 도메인 객체에서 가져오고 싶음 -->
+	    <association property="purchaseProd" javaType="ProductVO">
+        	<result property="prodNo" 	   column="PROD_NO" 		 jdbcType="NUMERIC"></result>
+        	<result property="proTranCode" column="TRAN_STATUS_CODE" jdbcType="VARCHAR"></result>
+			<result property="prodName"    column="PROD_NAME"		 jdbcType="VARCHAR"></result>
+	   	</association>
+ 		
+ 		<!-- purchaseVO 객체에 다른 도메인 객체를 참조한 속성이 있음 -->
+     	<association property="buyer" javaType="User">
+        	<result property="userId" column="BUYER_ID" jdbcType="VARCHAR"/>
+    	</association>   	
+
+	</resultMap>
+	
+	<!-- SQL : INSERT -->
+	<insert id="addPurchase" parameterType="PurchaseVO" >
+		INSERT 
+		INTO transaction (TRAN_NO, PROD_NO, BUYER_ID, PAYMENT_OPTION, RECEIVER_NAME, RECEIVER_PHONE, DEMAILADDR, DLVY_REQUEST, TRAN_STATUS_CODE, ORDER_DATA, DLVY_DATE)
+		VALUES ( seq_transaction_tran_no.nextval, #{purchaseProd.prodNo}, #{buyer.userId}, #{paymentOption}, #{receiverName}, #{receiverPhone}, #{divyAddr}, #{divyRequest}, #{purchaseProd.proTranCode}, SYSDATE, #{divyDate} )
+	 </insert>  
+	 
+ 	<!-- SQL : SELECT LIST -->
+ 	<!-- userId 로 조회해서 product, transaction 관한 정보 받아오면 됨 -->
+	<select  id="getPurchaseList"  parameterType="search"	resultMap="purchaseSelectMap">
+	  	SELECT t.BUYER_ID, p.PROD_NAME , t.RECEIVER_NAME, t.RECEIVER_PHONE, t.TRAN_STATUS_CODE
+	  	FROM transaction t
+	  	INNER JOIN product p ON t.PROD_NO = p.PROD_NO
+	  	WHERE BUYER_ID = #{userId}
+	 </select>
+
+	 <!-- SQL : SELECT ONE -->
+	 <select 	id="findPurchase" parameterType="purchaseVO"	resultMap="purchaseSelectMap">
+		SELECT
+		TRAN_STATUS_CODE, TRAN_NO		
+		FROM transaction 
+		WHERE PROD_NO = #{purchaseProd.prodNo}
+	 </select>
+ 
+	 <!-- SQL : UPDATE -->
+	 <update	id="updatePurchase"	parameterType="purchaseVO" >
+	   	UPDATE transaction
+	   	<set>
+	   		TRAN_STATUS_CODE = #{purchaseProd.proTranCode}
+	   	</set>
+	   	WHERE PROD_NO = #{purchaseProd.prodNo}
+	 </update>
+	 
+	 	<!--  위 두번째 subQuery 의  
+	 			WHERE ROWNUM &lt;= #{endRowNum} ) 는
+	 			WHERE ROWNUM <= #{endRowNum} ) 의미이며..
+	 			< 는 keyword 로 &lt; 를	사용.
+	 			
+	 			<![CDATA[  ~~~  ]]> 를 이용하여 아래와 같이 사용  할 수 있다.
+	 			CDATA ==> Character Data 의 의미 Java 에서 \n 같은 특수문자 처리  
+
+				WHERE ROWNUM <![CDATA[ <=]]> #{endRowNum} )
+		-->
+	
+	<!-- SQL : SELECT ROW Count 
+	 <select  id="getTotalCount"  parameterType="search"	 resultType="int">
+	  	SELECT COUNT(*)
+	  	FROM(	SELECT user_id , user_name , email
+						FROM users
+						<if test="searchCondition != null">
+							<where>
+								<if test="searchCondition == 0 and searchKeyword !='' ">
+						 			user_id = #{searchKeyword}
+								</if>
+								<if test="searchCondition == 1 and searchKeyword !='' ">
+						 		user_name = #{searchKeyword}
+								</if>
+							</where>
+						</if> ) countTable						
+	 </select>
+	-->	 
+</mapper>
